@@ -1,0 +1,24 @@
+.swipe-buttons {
+    display: flex;
+    justify-content: center;
+    margin-top: 25px;
+    gap: 2rem;
+  }
+  
+  .btn {
+    background: white;
+    border: none;
+    border-radius: 50%;
+    padding: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+  }
+  
+  .btn.left {
+    color: #ff4b5c;
+  }
+  
+  .btn.right {
+    color: #00c853;
+  }
+  

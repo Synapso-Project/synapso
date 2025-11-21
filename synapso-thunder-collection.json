@@ -1,0 +1,94 @@
+{
+    "client": "Thunder Client",
+    "collectionName": "Synapso API",
+    "dateExported": "2025-09-06T12:00:00.000Z",
+    "version": "1.1",
+    "requests": [
+      {
+        "name": "Signup - Alice",
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/users/signup",
+        "headers": [
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "type": "json",
+          "raw": "{\"username\":\"Alice\",\"email\":\"alice@example.com\",\"password\":\"alicepwd\",\"subjects\":[\"Math\",\"Physics\"],\"availability\":[\"Mon 18-20\",\"Wed 16-18\"]}"
+        }
+      },
+      {
+        "name": "Signup - Bob",
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/users/signup",
+        "headers": [
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "type": "json",
+          "raw": "{\"username\":\"Bob\",\"email\":\"bob@example.com\",\"password\":\"bobpwd\",\"subjects\":[\"Math\",\"Chemistry\"],\"availability\":[\"Mon 18-20\",\"Thu 14-15\"]}"
+        }
+      },
+      {
+        "name": "Login - Alice",
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/users/login",
+        "headers": [
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "type": "json",
+          "raw": "{\"email\":\"alice@example.com\",\"password\":\"alicepwd\"}"
+        }
+      },
+      {
+        "name": "Login - Bob",
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/users/login",
+        "headers": [
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "type": "json",
+          "raw": "{\"email\":\"bob@example.com\",\"password\":\"bobpwd\"}"
+        }
+      },
+      {
+        "name": "Get Current User (/me)",
+        "method": "GET",
+        "url": "http://127.0.0.1:8000/users/me",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{access_token}}" }
+        ]
+      },
+      {
+        "name": "Swipe",
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/users/swipe",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{access_token}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "type": "json",
+          "raw": "{\"swipee_id\":\"{{swipee_id}}\",\"direction\":\"right\"}"
+        }
+      },
+      {
+        "name": "Recommendations",
+        "method": "GET",
+        "url": "http://127.0.0.1:8000/users/recommendations",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{access_token}}" }
+        ]
+      },
+      {
+        "name": "Matches",
+        "method": "GET",
+        "url": "http://127.0.0.1:8000/users/matches",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{access_token}}" }
+        ]
+      }
+    ]
+  }
+  
