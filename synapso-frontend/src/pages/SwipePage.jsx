@@ -13,7 +13,7 @@ const SwipePage = () => {
   const [matches, setMatches] = useState(0);
   const [swipeCount, setSwipeCount] = useState(0);
   const [error, setError] = useState('');
-  
+
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -27,14 +27,12 @@ const SwipePage = () => {
       setLoading(true);
       setError('');
       const token = localStorage.getItem('access_token');
-      
       const response = await axios.get('http://127.0.0.1:8000/swipes/recommendations', {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
-      
       setUsers(response.data);
       setCurrentIndex(0);
     } catch (error) {
@@ -70,7 +68,6 @@ const SwipePage = () => {
   const handleSwipe = async (direction, userId) => {
     try {
       const token = localStorage.getItem('access_token');
-      
       await axios.post('http://127.0.0.1:8000/swipes/', {
         swipee_id: userId,
         direction: direction
@@ -82,21 +79,20 @@ const SwipePage = () => {
       });
 
       setSwipeCount(prev => prev + 1);
-      
+
       if (direction === 'right') {
         fetchMatches();
-        
         if (Math.random() > 0.7) {
           showMatchNotification();
         }
       }
 
       setCurrentIndex(prev => prev + 1);
-      
+
       if (currentIndex >= users.length - 3) {
         fetchRecommendations();
       }
-      
+
     } catch (error) {
       console.error('Error swiping:', error);
       if (error.response?.status === 401) {
@@ -129,9 +125,7 @@ const SwipePage = () => {
       box-shadow: 0 15px 40px rgba(136, 99, 85, 0.4);
       animation: bounceIn 0.6s ease;
     `;
-    
     document.body.appendChild(notification);
-    
     setTimeout(() => {
       if (document.body.contains(notification)) {
         document.body.removeChild(notification);
