@@ -2,6 +2,7 @@
 from fastapi import FastAPI, applications
 from fastapi.middleware.cors import CORSMiddleware
 from backend.config import CORS_ORIGINS, MONGO_URI, MONGO_DB
+from .config import CORS_ORIGINS, MONGO_URI, MONGO_DB
 from backend.routers import users, swipes, matches, messages  # Added messages
 from backend.models import User, Match, Group, Swipe, Message, Chat  # Added Message, Chat
 from motor.motor_asyncio import AsyncIOMotorClient
