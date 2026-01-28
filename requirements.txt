@@ -1,4 +1,8 @@
 
+<<<<<<< HEAD
+=======
+fastapi==0.115.0
+>>>>>>> a01ffde6f3a24ef418e76f01bbdd1f34a44fc191
 uvicorn[standard]==0.30.6
 pydantic==2.9.2
 pydantic[email]==2.9.2
@@ -8,3 +12,7 @@ python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.9
 python-dotenv==1.0.1
+<<<<<<< HEAD
+=======
+
+>>>>>>> a01ffde6f3a24ef418e76f01bbdd1f34a44fc191
