@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 fastapi==0.115.0
 uvicorn[standard]==0.30.6
 pydantic==2.9.2
@@ -8,3 +9,15 @@ python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.9
 python-dotenv==1.0.1
+=======
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+pydantic==2.9.2
+pydantic[email]==2.9.2
+beanie==1.23.6
+motor==3.5.1
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.9
+python-dotenv==1.0.1
+>>>>>>> c33334f10370ad7f68bbc7221f9c572738d8df97
