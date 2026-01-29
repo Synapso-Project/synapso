@@ -1,17 +1,19 @@
 import sys
 import os
-#sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# FIX: Add CURRENT DIRECTORY to path FIRST
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.routers import users, swipes, matches, messages
+from backend.routers.users import router as users_router
+from backend.routers.swipes import router as swipes_router
+from backend.routers.matches import router as matches_router
+from backend.routers.messages import router as messages_router
 from backend.models import User, Match, Group, Swipe, Message, Chat
 from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
 from backend.routers.studyroom import router as studyroom_router
 from backend.config import CORS_ORIGINS, MONGO_URI, MONGO_DB
-
 
 app = FastAPI(title="Synapso API", version="1.0.0", description="Study Partner Matching Platform")
 
@@ -53,12 +55,19 @@ async def app_init():
         print(f"❌ Database connection failed: {e}")
 
 # ---------- Routers ----------
-app.include_router(users.router)
-app.include_router(swipes.router)
-app.include_router(matches.router)
-app.include_router(messages.router) 
-app.include_router(studyroom_router)
+#app.include_router(users.router)
+#app.include_router(swipes.router)
+#app.include_router(matches.router)
+#app.include_router(messages.router) 
+#app.include_router(studyroom_router)
  # Added messages router
+
+app.include_router(users_router)
+app.include_router(swipes_router)
+app.include_router(matches_router)
+app.include_router(messages_router)
+app.include_router(studyroom_router)
+
 
 @app.get("/")
 async def root():

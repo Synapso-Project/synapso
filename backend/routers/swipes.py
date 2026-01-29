@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from backend.models import User, Swipe, Match
 from backend.routers.users import get_current_user
+#from backend.users import get_current_user
 from backend.schemas import SwipeInput
 from typing import List
 from datetime import datetime
