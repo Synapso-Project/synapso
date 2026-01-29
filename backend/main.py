@@ -1,22 +1,21 @@
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from fastapi import FastAPI, applications
+
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-#from backend.config import CORS_ORIGINS, MONGO_URI, MONGO_DB
-#from backend.config import CORS_ORIGINS, MONGO_URI, MONGO_DB
-from backend.routers import users, swipes, matches, messages  # Added messages
-from backend.models import User, Match, Group, Swipe, Message, Chat  # Added Message, Chat
+from backend.routers import users, swipes, matches, messages
+from backend.models import User, Match, Group, Swipe, Message, Chat
 from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
 from backend.routers.studyroom import router as studyroom_router
-
-#sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from config import CORS_ORIGINS, MONGO_URI, MONGO_DB
 
-
-
 app = FastAPI(title="Synapso API", version="1.0.0", description="Study Partner Matching Platform")
+
+
+
+#app = FastAPI(title="Synapso API", version="1.0.0", description="Study Partner Matching Platform")
 
 # ---------- CORS ----------
 app.add_middleware(
