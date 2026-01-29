@@ -1,22 +1,15 @@
-import sys
-import os
-# FIX: Add CURRENT DIRECTORY to path FIRST
-#sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-#sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.insert(0, '.')
-
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.routers.users import router as users_router
-from backend.routers.swipes import router as swipes_router
-from backend.routers.matches import router as matches_router
-from backend.routers.messages import router as messages_router
-from backend.models import User, Match, Group, Swipe, Message, Chat
+from routers.users import router as users_router
+from routers.swipes import router as swipes_router
+from routers.matches import router as matches_router
+from routers.messages import router as messages_router
+from models import User, Match, Group, Swipe, Message, Chat
 from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
-from backend.routers.studyroom import router as studyroom_router
-from backend.config import CORS_ORIGINS, MONGO_URI, MONGO_DB
+from routers.studyroom import router as studyroom_router
+from config import CORS_ORIGINS, MONGO_URI, MONGO_DB
+
 
 app = FastAPI(title="Synapso API", version="1.0.0", description="Study Partner Matching Platform")
 

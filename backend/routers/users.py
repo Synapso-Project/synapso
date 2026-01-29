@@ -5,12 +5,12 @@ from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
-# ✅ ABSOLUTE IMPORTS - SAME AS main.py
-from backend.models import User
-from backend.schemas import UserCreate, UserLogin, UserPublic, TokenResponse, UserProfileUpdate, ProfileUpdateResponse
-from backend.config import JWT_SECRET, JWT_ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
+from models import User
+from schemas import UserCreate, UserLogin, UserPublic, TokenResponse, UserProfileUpdate, ProfileUpdateResponse
+from config import JWT_SECRET, JWT_ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 
 router = APIRouter(prefix="/users", tags=["users"])
+
 
 # ---------- Password Hashing ----------
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
