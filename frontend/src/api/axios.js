@@ -1,8 +1,10 @@
 import axios from "axios";
 
-// 🚀 PRODUCTION-READY: Auto-detects environment
-const isProduction = window.location.hostname !== 'localhost' && 
-                   window.location.hostname !== '127.0.0.1';
+// 🚀 BULLETPROOF PRODUCTION DETECTION
+const isProduction = import.meta.env.PROD || 
+                    window.location.hostname !== 'localhost' && 
+                    window.location.hostname !== '127.0.0.1' &&
+                    window.location.hostname !== 'localhost:5173';
 
 const API = axios.create({
   baseURL: isProduction 
