@@ -1,8 +1,7 @@
 import axios from "axios";
 
-// 🔥 FORCE PRODUCTION - NO DETECTION LOGIC
 const API = axios.create({
-  baseURL: "https://synapso-backend.onrender.com"
+  baseURL: "https://synapso-backend.onrender.com"  // HARDCODE
 });
 
 API.interceptors.request.use((config) => {
