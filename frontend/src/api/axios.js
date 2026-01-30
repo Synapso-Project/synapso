@@ -1,15 +1,8 @@
 import axios from "axios";
 
-// 🚀 BULLETPROOF PRODUCTION DETECTION
-const isProduction = import.meta.env.PROD || 
-                    window.location.hostname !== 'localhost' && 
-                    window.location.hostname !== '127.0.0.1' &&
-                    window.location.hostname !== 'localhost:5173';
-
+// 🔥 FORCE PRODUCTION - NO DETECTION LOGIC
 const API = axios.create({
-  baseURL: isProduction 
-    ? "https://synapso-backend.onrender.com"  // ✅ PRODUCTION
-    : "http://127.0.0.1:8000",               // ✅ LOCAL DEVELOPMENT
+  baseURL: "https://synapso-backend.onrender.com"
 });
 
 API.interceptors.request.use((config) => {
