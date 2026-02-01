@@ -11,18 +11,20 @@ from config import JWT_SECRET, JWT_ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 
 router = APIRouter(tags=["users"])
 
-
-# ---------- Password Hashing ----------
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# ---------- Password Hashing (RENDER-SAFE) ----------
+pwd_context = CryptContext(schemes=["argon2", "bcrypt"], deprecated="auto")
 
 # ---------- Authentication ----------
 security = HTTPBearer()
 
+# ✅ FIXED: Truncate passwords (bcrypt 72-byte limit + Render-safe)
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    safe_password = password[:72]  # CRITICAL: bcrypt limit
+    return pwd_context.hash(safe_password)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    safe_password = plain_password[:72]  # CRITICAL: bcrypt limit
+    return pwd_context.verify(safe_password, hashed_password)
 
 # ---------- JWT Helpers ----------
 def create_access_token(data: dict, expires_delta: int = None):
