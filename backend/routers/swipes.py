@@ -1,13 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from backend.models import User, Swipe, Match
-from backend.routers.users import get_current_user
-#from backend.users import get_current_user
-from backend.schemas import SwipeInput
+from models import User, Swipe, Match  # ✅ FIXED import
+from routers.users import get_current_user  # ✅ FIXED import
+from schemas import SwipeInput
 from typing import List
 from datetime import datetime
 import traceback
+from bson import ObjectId
 
-router = APIRouter(prefix="/swipes", tags=["swipes"])
+router = APIRouter(tags=["swipes"])  # ✅ NO PREFIX HERE
+
 
 @router.get("/recommendations", response_model=List[dict])
 async def get_recommendations(current_user: User = Depends(get_current_user)):
