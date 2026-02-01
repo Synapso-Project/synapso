@@ -25,7 +25,7 @@ client = AsyncIOMotorClient(
 db = client[MONGO_DB]
 
 # Auth / JWT
-JWT_SECRET = os.getenv("JWT_SECRET", "your-super-secret-key-change-in-production")
+JWT_SECRET = os.getenv("JWT_SECRET", "d9f8a7b3c6e4f1a2d5e7b8c9f0a1d2e3f4b5c6a7d8e9f0b1c2d3e4f5a6b7c8d9")
 JWT_ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 
