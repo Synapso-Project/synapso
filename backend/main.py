@@ -20,7 +20,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ---------- FIXED Startup: Use config db + ROUTE DEBUG ----------
+# ---------- FIXED Startup: Safe route debugging ----------
 @app.on_event("startup")
 async def app_init():
     try:
@@ -32,16 +32,17 @@ async def app_init():
         print("✅ Beanie initialized with config db!")
         print("✅ Models ready: User, Match, Group, Swipe, Message, Chat")
         
-        # ✅ DEBUG: Verify ALL ROUTERS LOADED
-        print("\n🚀 ROUTES REGISTERED:")
+        # ✅ SAFE: Only HTTP routes (skip WebSocket)
+        print("\n🚀 HTTP ROUTES REGISTERED:")
         route_count = 0
         for route in app.routes:
-            if hasattr(route, 'path'):
-                print(f"  {list(route.methods)} {route.path}")
+            # ✅ FIX: Check if route has methods attribute
+            if hasattr(route, 'methods') and route.methods:
+                print(f"  {list(route.methods)} {getattr(route, 'path', 'unknown')}")
                 route_count += 1
-        print(f"✅ TOTAL ROUTES: {route_count}")
+        print(f"✅ TOTAL HTTP ROUTES: {route_count}")
         
-        # ✅ Count users for recommendations
+        # ✅ Verify users exist for recommendations
         user_count = await User.count()
         print(f"✅ USERS IN DB: {user_count}")
         
@@ -51,7 +52,7 @@ async def app_init():
         traceback.print_exc()
         raise
 
-# ---------- ROUTERS WITH PREFIXES ----------
+# ---------- ROUTERS ----------
 app.include_router(users_router, prefix="/users", tags=["users"])
 app.include_router(swipes_router, prefix="/swipes", tags=["swipes"])
 app.include_router(matches_router, prefix="/matches", tags=["matches"])
@@ -69,7 +70,7 @@ async def root():
             "/users/me (GET)", 
             "/swipes/recommendations (GET)",
             "/swipes/ (POST)",
-            "/matches (GET)"
+            "/matches/matches/ (GET)"
         ],
         "status": "ALL ROUTES READY"
     }
@@ -78,16 +79,16 @@ async def root():
 async def health_check():
     return {"status": "healthy", "database": "connected"}
 
-# ✅ DEBUG: Test route registration
+# ✅ SAFE Debug endpoint
 @app.get("/debug/routes")
 async def debug_routes():
-    """DEBUG: List all registered routes"""
+    """List all HTTP routes (safe for WebSocket)"""
     routes = []
     for route in app.routes:
-        if hasattr(route, 'path'):
+        if hasattr(route, 'methods') and hasattr(route, 'path'):
             routes.append({
                 "path": route.path,
                 "methods": list(route.methods),
                 "name": getattr(route, 'name', 'unknown')
             })
-    return {"total_routes": len(routes), "routes": routes}
+    return {"total_http_routes": len(routes), "routes": routes}
