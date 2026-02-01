@@ -1,21 +1,34 @@
 import os
 from dotenv import load_dotenv
 from motor.motor_asyncio import AsyncIOMotorClient
+from ssl import SSLContext, CERT_NONE
 
 load_dotenv()
 
-# MongoDB - Atlas Compatible
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")  # ✅ Uses Render MONGO_URI
+# MongoDB Atlas - Render SSL Fixed ✅
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 MONGO_DB = os.getenv("DB_NAME", "synapso")
-client = AsyncIOMotorClient(MONGO_URI)
+
+# SSL Context for Render
+ssl_context = SSLContext()
+ssl_context.check_hostname = False
+ssl_context.verify_mode = CERT_NONE
+
+client = AsyncIOMotorClient(
+    MONGO_URI,
+    ssl=ssl_context,  # ✅ Fixes TLSV1_ALERT_INTERNAL_ERROR
+    serverSelectionTimeoutMS=5000,
+    connectTimeoutMS=10000,
+    heartbeatFrequencyMS=10000
+)
 db = client[MONGO_DB]
 
-# Auth / JWT
+# Auth / JWT - UNCHANGED
 JWT_SECRET = os.getenv("JWT_SECRET", "your-super-secret-key-change-in-production")
 JWT_ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 
-# CORS - Production Ready (Updated for Render)
+# CORS - Production Ready (Fixed malformed URL)
 CORS_ORIGINS = [o.strip() for o in os.getenv(
     "CORS_ORIGINS", 
     "http://localhost:5173,http://127.0.0.1:5173,https://synapso-frontend.onrender.com"
