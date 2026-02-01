@@ -1,8 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  // REMOVED baseURL - single service same-origin
-  // All requests go to same domain: https://synapso-app.onrender.com/*
+  baseURL: "https://synapso-backend.onrender.com",  // ← BACKEND URL
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'
