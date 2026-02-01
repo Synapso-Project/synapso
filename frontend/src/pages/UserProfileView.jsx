@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { ArrowLeft, User, BookOpen, Clock, Heart, Brain, MapPin } from 'lucide-react';
 import axios from 'axios';
 import Header from '../components/Header';
+
+// ✅ FIXED: Backend URL consistency
+const API_BASE = 'https://synapso-backend.onrender.com';
 
 const UserProfileView = () => {
   const { userId } = useParams();
@@ -10,17 +14,20 @@ const UserProfileView = () => {
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const { logout } = useAuth();
 
   useEffect(() => {
     fetchUserProfile();
   }, [userId]);
 
+  // ✅ FIXED: Correct endpoint + 401 handling + API_BASE
   const fetchUserProfile = async () => {
     try {
       setLoading(true);
+      setError('');
       const token = localStorage.getItem('access_token');
       
-      const response = await axios.get(`https://synapso-app.onrender.com/users/${userId}`, {
+      const response = await axios.get(`${API_BASE}/users/${userId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -30,7 +37,14 @@ const UserProfileView = () => {
       setUserProfile(response.data);
     } catch (error) {
       console.error('Error fetching user profile:', error);
-      setError('Failed to load user profile');
+      if (error.response?.status === 401) {
+        logout();
+        navigate('/login');
+      } else if (error.response?.status === 403 || error.response?.status === 404) {
+        setError('Profile not found or access denied');
+      } else {
+        setError('Failed to load user profile');
+      }
     } finally {
       setLoading(false);
     }

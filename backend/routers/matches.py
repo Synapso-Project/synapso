@@ -4,15 +4,15 @@ from backend.routers.users import get_current_user
 from typing import List
 from datetime import datetime
 
-router = APIRouter(prefix="/matches", tags=["matches"])
+# ✅ FIXED: Move to /users prefix OR add both endpoints
+router = APIRouter(prefix="/users", tags=["matches"])  # ✅ CHANGED PREFIX
 
-@router.get("/", response_model=List[dict])
+@router.get("/matches", response_model=List[dict])  # ✅ /users/matches
 async def get_matches(current_user: User = Depends(get_current_user)):
     """Get all matches for the current user"""
     try:
         print(f"Getting matches for user: {current_user.email} (ID: {current_user.id})")
         
-        # Find matches where current user is either user1 or user2
         matches = await Match.find(
             {"$or": [
                 {"user1_id": str(current_user.id)},
@@ -24,15 +24,13 @@ async def get_matches(current_user: User = Depends(get_current_user)):
         
         result = []
         for match in matches:
-            print(f"Processing match: {match.user1_id} <-> {match.user2_id}")
-            
-            # Get the other user's information
             other_user_id = match.user2_id if match.user1_id == str(current_user.id) else match.user1_id
             
             try:
                 other_user = await User.get(other_user_id)
                 if other_user:
                     match_data = {
+                        "id": str(match.id),  # ✅ Frontend expects "id"
                         "match_id": str(match.id),
                         "user_id": str(other_user.id),
                         "username": other_user.username,
@@ -40,12 +38,10 @@ async def get_matches(current_user: User = Depends(get_current_user)):
                         "subjects": getattr(other_user, 'subjects', []),
                         "availability": getattr(other_user, 'availability', []),
                         "bio": getattr(other_user, 'bio', ''),
-                        "matched_at": match.matched_at if hasattr(match, 'matched_at') else datetime.utcnow()
+                        "matched_at": match.matched_at.isoformat() if hasattr(match, 'matched_at') else datetime.utcnow().isoformat()
                     }
                     result.append(match_data)
                     print(f"Added match with user: {other_user.username}")
-                else:
-                    print(f"User not found: {other_user_id}")
             except Exception as e:
                 print(f"Error getting user {other_user_id}: {e}")
         
