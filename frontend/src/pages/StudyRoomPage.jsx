@@ -10,7 +10,8 @@ function StudyRoomPage() {
   const sessionId = localStorage.getItem('sessionId') || `tab-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
   localStorage.setItem('sessionId', sessionId); // Lock this tab's identity
   
-  const userToken = localStorage.getItem('token');
+  // ✅ FIXED: Use access_token (matches SwipePage/Login)
+  const userToken = localStorage.getItem('access_token'); 
   const [currentUser, setCurrentUser] = useState(null);
 
   // FIXED: Extract username FROM YOUR ACTUAL AUTH SYSTEM
@@ -31,7 +32,8 @@ function StudyRoomPage() {
   // Store username locally to survive refreshes
   localStorage.setItem(`username-${sessionId}`, username);
   
-  const WS_URL = `ws://https://synapso-app.onrender.com/ws/studyroom/${roomId}/${username}/${sessionId}`;
+  // ✅ FIXED: WebSocket URL - Backend Render + wss:// + correct token
+  const WS_URL = `wss://synapso-backend.onrender.com/studyroom/${roomId}/${username}/${sessionId}`;
 
   // All your existing state...
   const [users, setUsers] = useState([]);
@@ -62,6 +64,7 @@ function StudyRoomPage() {
     console.log(`🚀 TAB SESSION: ${sessionId}`);
     console.log(`👤 TAB USERNAME: ${username}`);
     console.log(`📺 ROOM: ${roomId}`);
+    console.log(`🔌 WS URL: ${WS_URL}`);
     
     const socket = new WebSocket(WS_URL);
     
@@ -69,12 +72,13 @@ function StudyRoomPage() {
       setConnected(true);
       console.log(`✅ ${username} (${sessionId.slice(0,6)}) CONNECTED`);
       
-      // Send unique join with session
+      // Send unique join with session + token
       socket.send(JSON.stringify({ 
         type: "user_join", 
         username,
         sessionId,
-        roomId
+        roomId,
+        token: userToken  // ✅ Send auth token to backend
       }));
     };
 
@@ -243,7 +247,7 @@ function StudyRoomPage() {
           <div style={{ background: "rgba(255,255,255,0.93)", borderRadius: 20, padding: 20, boxShadow: "0 4px 20px #3d302d22" }}>
             <div style={{ fontWeight: 700, color: "#3d302d", fontSize: 18, marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               Live Video ({users.length + 1} online) 
-              <span style={{ fontSize: 12, color: "#886355" }}>Session: {sessionId.slice(0,8)}...</span>
+              <span style={{ fontSize: 12, color: "#886355" }}>Session: {sessionId.slice(0,8)}... | <span style={{ color: connected ? "#22c55e" : "#ef4444" }}>{connected ? "🟢 Connected" : "🔴 Disconnected"}</span></span>
               {isOwner && (
                 <button onClick={startVideoCall} style={{
                   background: "#886355", color: "white", border: "none", padding: "8px 16px",

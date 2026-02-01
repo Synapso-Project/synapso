@@ -1,21 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { MessageCircle, Clock } from 'lucide-react';
 import axios from 'axios';
+
+// ✅ FIXED: Backend URL consistency
+const API_BASE = 'https://synapso-backend.onrender.com';
 
 const ChatListPage = () => {
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   useEffect(() => {
     fetchMatches();
   }, []);
 
+  // ✅ FIXED: Correct endpoint + 401 handling + error UI
   const fetchMatches = async () => {
     try {
+      setLoading(true);
+      setError('');
       const token = localStorage.getItem('access_token');
-      const response = await axios.get('https://synapso-app.onrender.com/matches/', {
+      const response = await axios.get(`${API_BASE}/users/matches`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -24,6 +33,12 @@ const ChatListPage = () => {
       setMatches(response.data);
     } catch (error) {
       console.error('Error fetching matches:', error);
+      if (error.response?.status === 401) {
+        logout();
+        navigate('/login');
+      } else {
+        setError('Failed to load conversations');
+      }
     } finally {
       setLoading(false);
     }
@@ -89,6 +104,38 @@ const ChatListPage = () => {
         boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.2)',
         overflow: 'hidden'
       }}>
+        {/* Error Message */}
+        {error && (
+          <div style={{
+            background: 'rgba(239, 68, 68, 0.15)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            color: '#e53e3e',
+            padding: '14px 20px',
+            borderRadius: '12px',
+            margin: '20px',
+            fontWeight: '500',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            textAlign: 'center'
+          }}>
+            {error}
+            <button 
+              onClick={fetchMatches}
+              style={{
+                marginLeft: '10px',
+                background: 'none',
+                border: 'none',
+                color: '#e53e3e',
+                textDecoration: 'underline',
+                cursor: 'pointer',
+                fontWeight: '600'
+              }}
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
         {/* Header */}
         <div style={{
           background: 'linear-gradient(135deg, #b59175, #886355)',
@@ -134,8 +181,8 @@ const ChatListPage = () => {
             }}>
               {matches.map((match) => (
                 <div
-                  key={match.match_id}
-                  onClick={() => navigate(`/chat/${match.match_id}`)}
+                  key={match.id || match.match_id}
+                  onClick={() => navigate(`/chat/${match.id || match.match_id}`)}
                   style={{
                     background: 'rgba(255, 255, 255, 0.25)',
                     backdropFilter: 'blur(15px)',
@@ -214,7 +261,7 @@ const ChatListPage = () => {
                     flexShrink: 0
                   }}>
                     <Clock size={14} />
-                    {formatTime(match.matched_at)}
+                    {formatTime(match.matched_at || match.last_message_at)}
                   </div>
                 </div>
               ))}

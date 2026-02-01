@@ -1,477 +1,375 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { 
-  User, BookOpen, Clock, Heart, Brain, Target, Coffee, 
-  Moon, Sun, Users, Home, CheckCircle, Save 
-} from 'lucide-react';
+import { CheckCircle, ChevronLeft, BookOpen, Clock, Users } from 'lucide-react';
 import axios from 'axios';
-import './ProfileSetupPage.css';
+
+// ✅ FIXED: Backend URL consistency (matches all other pages)
+const API_BASE = 'https://synapso-backend.onrender.com';
 
 const ProfileSetupPage = () => {
+  const [formData, setFormData] = useState({
+    subjects: '',
+    availability: '',
+    bio: '',
+    studyGoals: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [step, setStep] = useState(1);
+  
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [currentStep, setCurrentStep] = useState(1);
-  const [profileData, setProfileData] = useState({
-    bio: '',
-    subjects: [],
-    availability: [],
-    studyHabits: [],
-    interests: [],
-    studyStyle: '',
-    preferredStudyTime: '',
-    studyLocation: '',
-    academicLevel: '',
-    goals: []
-  });
 
-  const subjectOptions = [
-    'Mathematics', 'Physics', 'Chemistry', 'Biology', 'Computer Science',
-    'English', 'History', 'Geography', 'Economics', 'Psychology',
-    'Philosophy', 'Literature', 'Art', 'Music', 'Languages',
-    'Engineering', 'Medicine', 'Law', 'Business', 'Finance'
-  ];
-
-  const availabilityOptions = [
-    'Mon 09-12', 'Mon 13-16', 'Mon 17-20', 'Mon 21-23',
-    'Tue 09-12', 'Tue 13-16', 'Tue 17-20', 'Tue 21-23',
-    'Wed 09-12', 'Wed 13-16', 'Wed 17-20', 'Wed 21-23',
-    'Thu 09-12', 'Thu 13-16', 'Thu 17-20', 'Thu 21-23',
-    'Fri 09-12', 'Fri 13-16', 'Fri 17-20', 'Fri 21-23',
-    'Sat 09-12', 'Sat 13-16', 'Sat 17-20', 'Sat 21-23',
-    'Sun 09-12', 'Sun 13-16', 'Sun 17-20', 'Sun 21-23'
-  ];
-
-  const studyHabitOptions = [
-    'Group Study', 'Solo Study', 'Discussion Based', 'Note Taking',
-    'Flashcards', 'Mind Maps', 'Practice Problems', 'Research',
-    'Presentations', 'Peer Teaching', 'Online Resources', 'Library Study'
-  ];
-
-  const interestOptions = [
-    'Technology', 'Sports', 'Music', 'Art', 'Travel', 'Reading',
-    'Gaming', 'Movies', 'Cooking', 'Photography', 'Fitness',
-    'Nature', 'Science', 'History', 'Politics', 'Environment'
-  ];
-
-  const handleMultiSelect = (field, value) => {
-    setProfileData(prev => ({
-      ...prev,
-      [field]: prev[field].includes(value)
-        ? prev[field].filter(item => item !== value)
-        : [...prev[field], value]
-    }));
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
   };
 
-  const handleInputChange = (field, value) => {
-    setProfileData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const nextStep = () => {
-    if (currentStep < 4) setCurrentStep(currentStep + 1);
-  };
-
-  const prevStep = () => {
-    if (currentStep > 1) setCurrentStep(currentStep - 1);
-  };
-
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setLoading(true);
+    setError('');
+    
     try {
       const token = localStorage.getItem('access_token');
       
-      console.log('Saving profile data:', profileData);
-      
-      const backendData = {
-        subjects: profileData.subjects,
-        availability: profileData.availability,
-        study_habits: profileData.studyHabits,
-        interests: profileData.interests,
-        bio: profileData.bio || null,
-        study_style: profileData.studyStyle || null,
-        preferred_study_time: profileData.preferredStudyTime || null,
-        study_location: profileData.studyLocation || null,
-        academic_level: profileData.academicLevel || null,
-        goals: typeof profileData.goals === 'string' 
-          ? profileData.goals.split(', ').filter(g => g.trim()) 
-          : profileData.goals
-      };
-      console.log('Sending to backend:', backendData);
-      
-      const response = await axios.put('https://synapso-app.onrender.com/users/profile', backendData, {
+      // ✅ FIXED: Correct backend URL + Authorization header
+      const response = await axios.patch(`${API_BASE}/users/me`, formData, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
-      
-      console.log('Profile saved successfully:', response.data);
-      
-      showSuccessNotification();
+
+      setSuccess('Profile updated successfully! 🎉');
       
       setTimeout(() => {
         navigate('/swipe');
       }, 2000);
-      
+
     } catch (error) {
-      console.error('Profile setup error:', error);
-      
+      console.error('Profile update error:', error);
       if (error.response?.status === 401) {
-        alert('Session expired. Please login again.');
+        // Token expired, redirect to login
         navigate('/login');
-      } else if (error.response?.status === 404) {
-        alert('Profile endpoint not found. Using mock save for now...');
-        setTimeout(() => {
-          navigate('/swipe');
-        }, 1000);
       } else {
-        alert(`Failed to save profile: ${error.response?.data?.detail || error.message}`);
+        setError(error.response?.data?.detail || 'Failed to update profile. Please try again.');
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const showSuccessNotification = () => {
-    const notification = document.createElement('div');
-    notification.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <div style="color: #38a169; font-size: 1.5rem;">✅</div>
-        <div>
-          <div style="font-weight: bold; font-size: 1.1rem;">Profile Setup Complete!</div>
-          <div style="font-size: 0.9rem; margin-top: 5px;">Ready to find study partners...</div>
-        </div>
-      </div>
-    `;
-    notification.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: white;
-      color: #2d3748;
-      padding: 20px;
-      border-radius: 15px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      z-index: 10000;
-      border-left: 4px solid #38a169;
-      animation: slideIn 0.5s ease;
-    `;
-    
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes slideIn {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-      }
-    `;
-    document.head.appendChild(style);
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-      if (document.body.contains(notification)) {
-        notification.style.animation = 'slideIn 0.5s ease reverse';
-        setTimeout(() => {
-          if (document.body.contains(notification)) {
-            document.body.removeChild(notification);
-          }
-          if (document.head.contains(style)) {
-            document.head.removeChild(style);
-          }
-        }, 500);
-      }
-    }, 3000);
+  const nextStep = () => {
+    if (step < 4) setStep(step + 1);
   };
 
-  const previewProfileData = () => {
-    const summary = `
-🎓 Profile Summary:
-━━━━━━━━━━━━━━━━━━
-
-📚 Subjects (${profileData.subjects.length}):
-${profileData.subjects.join(', ') || 'None selected'}
-
-⏰ Availability (${profileData.availability.length}):
-${profileData.availability.join(', ') || 'None selected'}
-
-🧠 Study Habits (${profileData.studyHabits.length}):
-${profileData.studyHabits.join(', ') || 'None selected'}
-
-❤️ Interests (${profileData.interests.length}):
-${profileData.interests.join(', ') || 'None selected'}
-
-📖 Bio: ${profileData.bio || 'Not provided'}
-🎯 Study Style: ${profileData.studyStyle || 'Not selected'}
-🕐 Preferred Time: ${profileData.preferredStudyTime || 'Not selected'}
-📍 Location: ${profileData.studyLocation || 'Not selected'}
-🎓 Academic Level: ${profileData.academicLevel || 'Not selected'}
-    `;
-    
-    console.log(summary);
-    alert(summary);
+  const prevStep = () => {
+    if (step > 1) setStep(step - 1);
   };
 
-  const renderStep1 = () => (
-    <div className="step-content">
-      <div className="step-header">
-        <BookOpen size={32} />
-        <h2>What do you want to study?</h2>
-        <p>Select subjects you're interested in studying</p>
-      </div>
-      
-      <div className="options-grid">
-        {subjectOptions.map(subject => (
-          <button
-            key={subject}
-            className={`option-btn ${profileData.subjects.includes(subject) ? 'selected' : ''}`}
-            onClick={() => handleMultiSelect('subjects', subject)}
-          >
-            {subject}
-          </button>
-        ))}
-      </div>
+  const commonInputStyle = {
+    width: '100%',
+    padding: '18px 20px',
+    background: 'rgba(255, 255, 255, 0.2)',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
+    border: '1px solid rgba(255, 255, 255, 0.25)',
+    borderRadius: '14px',
+    fontSize: '1rem',
+    boxSizing: 'border-box',
+    color: '#3d302d',
+    fontWeight: '500',
+    outline: 'none',
+    transition: 'all 0.3s ease',
+    marginBottom: '20px'
+  };
 
-      <div className="bio-section">
-        <label>Tell us about yourself (optional)</label>
-        <textarea
-          value={profileData.bio}
-          onChange={(e) => handleInputChange('bio', e.target.value)}
-          placeholder="I'm a computer science student who loves problem-solving..."
-          maxLength={200}
-        />
-        <small style={{ color: '#718096', fontSize: '0.8rem' }}>
-          {profileData.bio.length}/200 characters
-        </small>
-      </div>
-    </div>
-  );
-
-  const renderStep2 = () => (
-    <div className="step-content">
-      <div className="step-header">
-        <Clock size={32} />
-        <h2>When are you available?</h2>
-        <p>Select your preferred study times</p>
-      </div>
-      
-      <div className="availability-grid">
-        {availabilityOptions.map(time => (
-          <button
-            key={time}
-            className={`option-btn ${profileData.availability.includes(time) ? 'selected' : ''}`}
-            onClick={() => handleMultiSelect('availability', time)}
-          >
-            {time}
-          </button>
-        ))}
-      </div>
-
-      <div className="study-preferences">
-        <div className="preference-group">
-          <label>Preferred Study Time</label>
-          <select 
-            value={profileData.preferredStudyTime}
-            onChange={(e) => handleInputChange('preferredStudyTime', e.target.value)}
-          >
-            <option value="">Select...</option>
-            <option value="early-morning">Early Morning (6-9 AM)</option>
-            <option value="morning">Morning (9-12 PM)</option>
-            <option value="afternoon">Afternoon (12-5 PM)</option>
-            <option value="evening">Evening (5-9 PM)</option>
-            <option value="night">Night (9 PM+)</option>
-          </select>
-        </div>
-
-        <div className="preference-group">
-          <label>Study Location</label>
-          <select 
-            value={profileData.studyLocation}
-            onChange={(e) => handleInputChange('studyLocation', e.target.value)}
-          >
-            <option value="">Select...</option>
-            <option value="library">Library</option>
-            <option value="home">Home</option>
-            <option value="cafe">Cafe</option>
-            <option value="campus">Campus</option>
-            <option value="online">Online</option>
-          </select>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderStep3 = () => (
-    <div className="step-content">
-      <div className="step-header">
-        <Brain size={32} />
-        <h2>How do you study best?</h2>
-        <p>Select your study habits and preferences</p>
-      </div>
-      
-      <div className="options-grid">
-        {studyHabitOptions.map(habit => (
-          <button
-            key={habit}
-            className={`option-btn ${profileData.studyHabits.includes(habit) ? 'selected' : ''}`}
-            onClick={() => handleMultiSelect('studyHabits', habit)}
-          >
-            {habit}
-          </button>
-        ))}
-      </div>
-
-      <div className="study-style-section">
-        <label>Study Style</label>
-        <div className="radio-group">
-          {['Visual Learner', 'Auditory Learner', 'Kinesthetic Learner', 'Reading/Writing'].map(style => (
-            <button
-              key={style}
-              className={`radio-btn ${profileData.studyStyle === style ? 'selected' : ''}`}
-              onClick={() => handleInputChange('studyStyle', style)}
-            >
-              {style}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderStep4 = () => (
-    <div className="step-content">
-      <div className="step-header">
-        <Heart size={32} />
-        <h2>What are your interests?</h2>
-        <p>Help us find study partners with similar interests</p>
-      </div>
-      
-      <div className="options-grid">
-        {interestOptions.map(interest => (
-          <button
-            key={interest}
-            className={`option-btn ${profileData.interests.includes(interest) ? 'selected' : ''}`}
-            onClick={() => handleMultiSelect('interests', interest)}
-          >
-            {interest}
-          </button>
-        ))}
-      </div>
-
-      <div className="academic-section">
-        <div className="preference-group">
-          <label>Academic Level</label>
-          <select 
-            value={profileData.academicLevel}
-            onChange={(e) => handleInputChange('academicLevel', e.target.value)}
-          >
-            <option value="">Select...</option>
-            <option value="high-school">High School</option>
-            <option value="undergraduate">Undergraduate</option>
-            <option value="graduate">Graduate</option>
-            <option value="phd">PhD</option>
-            <option value="professional">Professional</option>
-          </select>
-        </div>
-
-        <div className="goals-section">
-          <label>Study Goals (optional)</label>
-          <textarea
-            value={profileData.goals.join(', ')}
-            onChange={(e) => handleInputChange('goals', e.target.value.split(', ').filter(g => g.trim()))}
-            placeholder="Pass exams, improve grades, learn new skills..."
-            maxLength={150}
-          />
-          <small style={{ color: '#718096', fontSize: '0.8rem' }}>
-            Separate multiple goals with commas
-          </small>
-        </div>
-      </div>
-
-      <div style={{ marginTop: '20px', textAlign: 'center' }}>
-        <button 
-          onClick={previewProfileData}
-          style={{
-            background: '#e2e8f0',
-            color: '#4a5568',
-            border: 'none',
-            padding: '8px 16px',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '0.8rem'
-          }}
-        >
-          👀 Preview Profile Data
-        </button>
-      </div>
-    </div>
-  );
+  const focusInputStyle = {
+    background: 'rgba(255, 255, 255, 0.3)',
+    borderColor: 'rgba(217, 192, 150, 0.5)',
+    boxShadow: '0 0 0 3px rgba(217, 192, 150, 0.1)'
+  };
 
   return (
-    <div className="profile-setup-page">
-      <div className="setup-container">
-        <div className="progress-bar">
-          <div className="progress" style={{ width: `${(currentStep / 4) * 100}%` }}></div>
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #d9c096 0%, #b59175 30%, #886355 70%, #3d302d 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px'
+    }}>
+      <div style={{
+        background: 'rgba(255, 255, 255, 0.15)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        borderRadius: '24px',
+        padding: '50px 40px',
+        width: '100%',
+        maxWidth: '500px',
+        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.2)'
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <h1 style={{ 
+            fontSize: '2.5rem',
+            marginBottom: '12px',
+            fontWeight: '800',
+            color: '#3d302d'
+          }}>
+            Complete Your Profile
+          </h1>
+          <p style={{ 
+            color: 'rgba(61, 48, 45, 0.8)',
+            fontSize: '1rem',
+            fontWeight: '500'
+          }}>
+            Tell us about your study preferences
+          </p>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            gap: '4px', 
+            marginTop: '20px' 
+          }}>
+            {[1,2,3,4].map(s => (
+              <div key={s} style={{
+                width: '12px',
+                height: '12px',
+                borderRadius: '50%',
+                background: s <= step ? '#886355' : 'rgba(136, 99, 85, 0.3)',
+                transition: 'all 0.3s ease'
+              }} />
+            ))}
+          </div>
         </div>
 
-        <div className="step-indicator">
-          <span>Step {currentStep} of 4</span>
-        </div>
-
-        {currentStep === 1 && renderStep1()}
-        {currentStep === 2 && renderStep2()}
-        {currentStep === 3 && renderStep3()}
-        {currentStep === 4 && renderStep4()}
-
-        <div className="navigation-buttons">
-          {currentStep > 1 && (
-            <button onClick={prevStep} className="nav-btn prev-btn">
-              Previous
-            </button>
+        <form onSubmit={handleSubmit}>
+          {step === 1 && (
+            <>
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ 
+                  display: 'block', 
+                  color: '#3d302d', 
+                  fontWeight: '600', 
+                  marginBottom: '8px',
+                  fontSize: '0.95rem'
+                }}>
+                  <BookOpen size={18} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'middle' }} />
+                  What subjects do you study? (comma separated)
+                </label>
+                <textarea
+                  name="subjects"
+                  placeholder="Math, Physics, Chemistry, Biology..."
+                  value={formData.subjects}
+                  onChange={handleChange}
+                  rows={4}
+                  required
+                  style={{ ...commonInputStyle, resize: 'vertical', minHeight: '120px' }}
+                  onFocus={(e) => Object.assign(e.target.style, focusInputStyle)}
+                  onBlur={(e) => {
+                    e.target.style.background = 'rgba(255, 255, 255, 0.2)';
+                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.25)';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                />
+              </div>
+            </>
           )}
-          
-          {currentStep < 4 ? (
-            <button 
-              onClick={nextStep} 
-              className="nav-btn next-btn"
-              disabled={
-                (currentStep === 1 && profileData.subjects.length === 0) ||
-                (currentStep === 2 && profileData.availability.length === 0) ||
-                (currentStep === 3 && profileData.studyHabits.length === 0)
-              }
-            >
-              Next
-            </button>
-          ) : (
-            <button 
-              onClick={handleSubmit} 
-              className="nav-btn finish-btn"
-              disabled={loading}
-            >
-              {loading ? 'Saving Profile...' : (
-                <>
-                  <Save size={16} />
-                  Complete Profile
-                </>
-              )}
-            </button>
-          )}
-        </div>
 
-        <div style={{ 
-          marginTop: '20px', 
-          textAlign: 'center', 
-          fontSize: '0.8rem', 
-          color: '#718096' 
-        }}>
-          Selected: {profileData.subjects.length} subjects, {profileData.availability.length} time slots, {profileData.studyHabits.length} habits, {profileData.interests.length} interests
-        </div>
+          {step === 2 && (
+            <>
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ 
+                  display: 'block', 
+                  color: '#3d302d', 
+                  fontWeight: '600', 
+                  marginBottom: '8px',
+                  fontSize: '0.95rem'
+                }}>
+                  <Clock size={18} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'middle' }} />
+                  When are you available? (e.g., Mon 18-20, Wed 16-18)
+                </label>
+                <textarea
+                  name="availability"
+                  placeholder="Mon 18-20, Wed 16-18, Fri 14-16..."
+                  value={formData.availability}
+                  onChange={handleChange}
+                  rows={3}
+                  required
+                  style={commonInputStyle}
+                  onFocus={(e) => Object.assign(e.target.style, focusInputStyle)}
+                  onBlur={(e) => {
+                    e.target.style.background = 'rgba(255, 255, 255, 0.2)';
+                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.25)';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                />
+              </div>
+            </>
+          )}
+
+          {step === 3 && (
+            <>
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ 
+                  display: 'block', 
+                  color: '#3d302d', 
+                  fontWeight: '600', 
+                  marginBottom: '8px',
+                  fontSize: '0.95rem'
+                }}>
+                  <Users size={18} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'middle' }} />
+                  Tell us about yourself (max 200 chars)
+                </label>
+                <textarea
+                  name="bio"
+                  placeholder="3rd year CS student passionate about algorithms and web dev..."
+                  value={formData.bio}
+                  onChange={handleChange}
+                  rows={4}
+                  maxLength={200}
+                  required
+                  style={{ ...commonInputStyle, resize: 'vertical', minHeight: '120px' }}
+                  onFocus={(e) => Object.assign(e.target.style, focusInputStyle)}
+                  onBlur={(e) => {
+                    e.target.style.background = 'rgba(255, 255, 255, 0.2)';
+                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.25)';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                />
+                <div style={{ 
+                  textAlign: 'right', 
+                  fontSize: '0.85rem', 
+                  color: 'rgba(61, 48, 45, 0.6)' 
+                }}>
+                  {formData.bio.length}/200
+                </div>
+              </div>
+            </>
+          )}
+
+          {step === 4 && (
+            <>
+              <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+                <CheckCircle size={64} style={{ color: '#38a169', marginBottom: '20px' }} />
+                <h2 style={{ color: '#3d302d', fontWeight: '700', marginBottom: '12px' }}>
+                  Almost Done!
+                </h2>
+                <p style={{ color: 'rgba(61, 48, 45, 0.8)', marginBottom: '32px' }}>
+                  Review your study preferences and click save to start swiping!
+                </p>
+              </div>
+            </>
+          )}
+
+          {error && (
+            <div style={{
+              background: 'rgba(239, 68, 68, 0.15)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              color: '#e53e3e',
+              padding: '14px 18px',
+              borderRadius: '12px',
+              marginBottom: '20px',
+              fontSize: '0.9rem',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              fontWeight: '500'
+            }}>
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div style={{
+              background: 'rgba(56, 161, 105, 0.15)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              color: '#38a169',
+              padding: '14px 18px',
+              borderRadius: '12px',
+              marginBottom: '20px',
+              fontSize: '0.9rem',
+              border: '1px solid rgba(56, 161, 105, 0.3)',
+              fontWeight: '500'
+            }}>
+              {success}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+            {step > 1 && (
+              <button
+                type="button"
+                onClick={prevStep}
+                style={{
+                  flex: 1,
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  color: '#3d302d',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  padding: '16px',
+                  borderRadius: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s'
+                }}
+              >
+                <ChevronLeft size={18} style={{ display: 'inline', marginRight: '8px' }} />
+                Previous
+              </button>
+            )}
+            
+            {step < 4 ? (
+              <button
+                type="button"
+                onClick={nextStep}
+                disabled={loading}
+                style={{
+                  flex: 1,
+                  background: 'linear-gradient(135deg, #b59175, #886355)',
+                  color: 'white',
+                  border: 'none',
+                  padding: '16px',
+                  borderRadius: '14px',
+                  fontWeight: '700',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.3s'
+                }}
+              >
+                Next Step →
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  flex: 2,
+                  background: loading 
+                    ? 'rgba(181, 145, 117, 0.5)' 
+                    : 'linear-gradient(135deg, #b59175, #886355)',
+                  color: 'white',
+                  border: 'none',
+                  padding: '18px',
+                  borderRadius: '14px',
+                  fontSize: '1.05rem',
+                  fontWeight: '700',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.3s'
+                }}
+              >
+                {loading ? 'Saving...' : 'Save & Start Swiping!'}
+              </button>
+            )}
+          </div>
+        </form>
       </div>
     </div>
   );
 };
 
 export default ProfileSetupPage;
-

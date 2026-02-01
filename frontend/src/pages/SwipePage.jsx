@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import CustomSwipeCard from '../components/CustomSwipeCard';
 import { Users, MessageCircle, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import API from '../api/axios'; 
+import axios from 'axios';
 import '../components/CustomSwipeCard.css';
+
+// ✅ BACKEND URL - Render deployment
+const API_BASE = 'https://synapso-backend.onrender.com';
 
 const SwipePage = () => {
   const [users, setUsers] = useState([]);
@@ -17,17 +20,13 @@ const SwipePage = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchRecommendations();
-    fetchMatches();
-  }, []);
-
-  const fetchRecommendations = async () => {
+  // ✅ FIXED: Correct backend endpoints
+  const fetchRecommendations = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
       const token = localStorage.getItem('access_token');
-      const response = await axios.get('https://synapso-app.onrender.com/swipes/recommendations', {
+      const response = await axios.get(`${API_BASE}/swipes/recommendations`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -48,12 +47,13 @@ const SwipePage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [logout, navigate]);
 
-  const fetchMatches = async () => {
+  // ✅ FIXED: Correct matches endpoint from backend logs
+  const fetchMatches = useCallback(async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await axios.get('https://synapso-app.onrender.com/matches/', {
+      const response = await axios.get(`${API_BASE}/matches/matches/`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -63,12 +63,13 @@ const SwipePage = () => {
     } catch (error) {
       console.error('Error fetching matches:', error);
     }
-  };
+  }, []);
 
-  const handleSwipe = async (direction, userId) => {
+  // ✅ FIXED: useCallback + currentIndex fix
+  const handleSwipe = useCallback(async (direction, userId) => {
     try {
       const token = localStorage.getItem('access_token');
-      await axios.post('https://synapso-app.onrender.com/swipes/', {
+      await axios.post(`${API_BASE}/swipes/`, {
         swipee_id: userId,
         direction: direction
       }, {
@@ -87,11 +88,15 @@ const SwipePage = () => {
         }
       }
 
-      setCurrentIndex(prev => prev + 1);
-
-      if (currentIndex >= users.length - 3) {
-        fetchRecommendations();
-      }
+      // ✅ FIXED: Use functional update
+      setCurrentIndex(prevIndex => {
+        const nextIndex = prevIndex + 1;
+        // ✅ FIXED: Check against users.length BEFORE increment
+        if (nextIndex >= users.length - 3) {
+          fetchRecommendations();
+        }
+        return nextIndex;
+      });
 
     } catch (error) {
       console.error('Error swiping:', error);
@@ -102,9 +107,9 @@ const SwipePage = () => {
         setError('Failed to record swipe. Please try again.');
       }
     }
-  };
+  }, [users.length, fetchMatches, fetchRecommendations, logout, navigate]);
 
-  const showMatchNotification = () => {
+  const showMatchNotification = useCallback(() => {
     const notification = document.createElement('div');
     notification.textContent = "🎉 It's a Match!";
     notification.style.cssText = `
@@ -131,11 +136,16 @@ const SwipePage = () => {
         document.body.removeChild(notification);
       }
     }, 3000);
-  };
+  }, []);
 
-  const getVisibleCards = () => {
+  const getVisibleCards = useCallback(() => {
     return users.slice(currentIndex, currentIndex + 4);
-  };
+  }, [users, currentIndex]);
+
+  useEffect(() => {
+    fetchRecommendations();
+    fetchMatches();
+  }, []);
 
   if (loading) {
     return (

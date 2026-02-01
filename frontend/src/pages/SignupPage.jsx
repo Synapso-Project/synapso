@@ -4,6 +4,9 @@ import { useAuth } from '../context/AuthContext';
 import { UserPlus, User, Mail, Lock } from 'lucide-react';
 import axios from 'axios';
 
+// ✅ FIXED: Backend URL consistency
+const API_BASE = 'https://synapso-backend.onrender.com';
+
 const SignupPage = () => {
   const [formData, setFormData] = useState({
     username: '',
@@ -31,7 +34,8 @@ const SignupPage = () => {
     setSuccess('');
 
     try {
-      const signupResponse = await axios.post('https://synapso-app.onrender.com/users/signup', formData, {
+      // ✅ FIXED: Correct backend URL
+      const signupResponse = await axios.post(`${API_BASE}/users/signup`, formData, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -40,7 +44,8 @@ const SignupPage = () => {
       setSuccess('Account created successfully! Logging you in...');
 
       try {
-        const loginResponse = await axios.post('https://synapso-app.onrender.com/users/login', {
+        // ✅ FIXED: Correct backend URL for login
+        const loginResponse = await axios.post(`${API_BASE}/users/login`, {
           email: formData.email,
           password: formData.password
         }, {
@@ -353,5 +358,3 @@ const SignupPage = () => {
 };
 
 export default SignupPage;
-
-

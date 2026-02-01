@@ -3,7 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ArrowLeft, Send, User } from 'lucide-react';
 import axios from 'axios';
-import Header from '../components/Header'; // Add this import
+import Header from '../components/Header';
+
+// ✅ FIXED: Backend URL consistency
+const API_BASE = 'https://synapso-backend.onrender.com';
 
 const ChatPage = () => {
   const { matchId } = useParams();
@@ -12,7 +15,8 @@ const ChatPage = () => {
   const [loading, setLoading] = useState(true);
   const [otherUser, setOtherUser] = useState(null);
   const [sending, setSending] = useState(false);
-  const { user } = useAuth();
+  const [error, setError] = useState('');
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const messagesEndRef = useRef(null);
 
@@ -28,10 +32,13 @@ const ChatPage = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // ✅ FIXED: Correct endpoint + 401 handling
   const fetchMessages = async () => {
     try {
+      setLoading(true);
+      setError('');
       const token = localStorage.getItem('access_token');
-      const response = await axios.get(`https://synapso-app.onrender.com/messages/chat/${matchId}`, {
+      const response = await axios.get(`${API_BASE}/messages/chat/${matchId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -51,21 +58,28 @@ const ChatPage = () => {
       }
     } catch (error) {
       console.error('Error fetching messages:', error);
-      if (error.response?.status === 403) {
+      if (error.response?.status === 401) {
+        logout();
+        navigate('/login');
+      } else if (error.response?.status === 403) {
         navigate('/matches');
+      } else {
+        setError('Failed to load messages');
       }
     } finally {
       setLoading(false);
     }
   };
 
+  // ✅ FIXED: Correct endpoint + malformed URL fix
   const sendMessage = async () => {
     if (!newMessage.trim() || sending) return;
 
     setSending(true);
     try {
+      setError('');
       const token = localStorage.getItem('access_token');
-      const response = await axios.post('http://https://synapso-app.onrender.com/messages/send', {
+      const response = await axios.post(`${API_BASE}/messages/send`, {
         match_id: matchId,
         content: newMessage.trim()
       }, {
@@ -77,10 +91,14 @@ const ChatPage = () => {
 
       setMessages(prev => [...prev, response.data]);
       setNewMessage('');
-      
     } catch (error) {
       console.error('Error sending message:', error);
-      alert('Failed to send message. Please try again.');
+      if (error.response?.status === 401) {
+        logout();
+        navigate('/login');
+      } else {
+        setError('Failed to send message. Please try again.');
+      }
     } finally {
       setSending(false);
     }
@@ -151,6 +169,7 @@ const ChatPage = () => {
         flexDirection: 'column',
         background: 'linear-gradient(135deg, #d9c096 0%, #b59175 30%, #886355 70%, #3d302d 100%)'
       }}>
+        {/* Header */}
         <div style={{
           background: 'rgba(255, 255, 255, 0.15)',
           backdropFilter: 'blur(20px)',
@@ -229,6 +248,40 @@ const ChatPage = () => {
           </div>
         </div>
 
+        {/* Error Message */}
+        {error && (
+          <div style={{
+            background: 'rgba(239, 68, 68, 0.15)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            color: '#e53e3e',
+            padding: '14px 18px',
+            borderRadius: '12px',
+            margin: '0 24px 20px',
+            fontWeight: '500',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px'
+          }}>
+            {error}
+            <button 
+              onClick={() => setError('')}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#e53e3e',
+                cursor: 'pointer',
+                fontSize: '18px',
+                fontWeight: 'bold'
+              }}
+            >
+              ×
+            </button>
+          </div>
+        )}
+
+        {/* Messages */}
         <div style={{
           flex: 1,
           overflowY: 'auto',
@@ -347,6 +400,7 @@ const ChatPage = () => {
           <div ref={messagesEndRef} />
         </div>
 
+        {/* Input */}
         <div style={{
           background: 'rgba(255, 255, 255, 0.15)',
           backdropFilter: 'blur(20px)',
