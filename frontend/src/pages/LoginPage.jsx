@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LogIn, Mail, Lock } from 'lucide-react';
-import axios from 'axios';
+import API from '../api/axios';  // ✅ FIXED: Use shared axios instance
+
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -28,14 +29,11 @@ const LoginPage = () => {
     setError('');
 
     try {
-      const response = await axios.post('https://synapso-app.onrender.com/users/login', formData, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+      // ✅ FIXED: Use API instance (points to backend) + Correct token name
+      const response = await API.post('/users/login', formData);
 
       if (response.data && response.data.access_token) {
-        localStorage.setItem('access_token', response.data.access_token);
+        localStorage.setItem('token', response.data.access_token);  // ✅ Match axios interceptor
         login(response.data.user || { email: formData.email }, response.data.access_token);
         navigate('/swipe');
       } else {
@@ -49,7 +47,7 @@ const LoginPage = () => {
       } else if (error.response?.status === 401) {
         setError('Invalid credentials');
       } else {
-        setError('Login failed. Please try again.');
+        setError(`Login failed: ${error.response?.data?.detail || 'Please try again.'}`);
       }
     } finally {
       setLoading(false);
