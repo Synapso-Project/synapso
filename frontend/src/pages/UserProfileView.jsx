@@ -20,7 +20,7 @@ const UserProfileView = () => {
       setLoading(true);
       const token = localStorage.getItem('access_token');
       
-      const response = await axios.get(`http://127.0.0.1:8000/users/${userId}`, {
+      const response = await axios.get(`http://https://synapso-app.onrender.com/users/${userId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'

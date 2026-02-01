@@ -31,7 +31,7 @@ function StudyRoomPage() {
   // Store username locally to survive refreshes
   localStorage.setItem(`username-${sessionId}`, username);
   
-  const WS_URL = `ws://localhost:8000/ws/studyroom/${roomId}/${username}/${sessionId}`;
+  const WS_URL = `ws://https://synapso-app.onrender.com/ws/studyroom/${roomId}/${username}/${sessionId}`;
 
   // All your existing state...
   const [users, setUsers] = useState([]);

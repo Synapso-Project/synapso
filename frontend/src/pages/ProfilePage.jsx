@@ -23,7 +23,7 @@ const ProfilePage = () => {
   const fetchProfile = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await axios.get('http://127.0.0.1:8000/users/profile', {
+      const response = await axios.get('http://https://synapso-app.onrender.com/users/profile', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setProfile(response.data);
@@ -63,7 +63,7 @@ const ProfilePage = () => {
       };
       
   
-      await axios.put('http://127.0.0.1:8000/users/profile', updateData, {
+      await axios.put('http://https://synapso-app.onrender.com/users/profile', updateData, {
   headers: {
     Authorization: `Bearer ${token}`,
     'Content-Type': 'application/json'

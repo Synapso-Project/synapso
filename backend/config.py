@@ -24,5 +24,5 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60")
 # CORS - Production Ready
 CORS_ORIGINS = [o.strip() for o in os.getenv(
     "CORS_ORIGINS", 
-    "http://localhost:5173,https://synapso-app.onrender.com"
+    "https://synapso-app.onrender.com"
 ).split(",")]

@@ -31,7 +31,7 @@ const ChatPage = () => {
   const fetchMessages = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await axios.get(`http://127.0.0.1:8000/messages/chat/${matchId}`, {
+      const response = await axios.get(`http://https://synapso-app.onrender.com/messages/chat/${matchId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -65,7 +65,7 @@ const ChatPage = () => {
     setSending(true);
     try {
       const token = localStorage.getItem('access_token');
-      const response = await axios.post('http://127.0.0.1:8000/messages/send', {
+      const response = await axios.post('http://https://synapso-app.onrender.com/messages/send', {
         match_id: matchId,
         content: newMessage.trim()
       }, {

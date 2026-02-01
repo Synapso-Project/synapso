@@ -19,7 +19,7 @@ const MatchesPage = () => {
       setLoading(true);
       const token = localStorage.getItem('access_token');
       
-      const response = await axios.get('http://127.0.0.1:8000/matches/', {
+      const response = await axios.get('http://https://synapso-app.onrender.com/matches/', {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
