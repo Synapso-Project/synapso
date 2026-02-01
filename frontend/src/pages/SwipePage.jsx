@@ -3,7 +3,7 @@ import CustomSwipeCard from '../components/CustomSwipeCard';
 import { Users, MessageCircle, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import API from '../api/axios'; 
 import '../components/CustomSwipeCard.css';
 
 const SwipePage = () => {
