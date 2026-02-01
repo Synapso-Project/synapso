@@ -31,7 +31,7 @@ const ChatPage = () => {
   const fetchMessages = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await axios.get(`http://https://synapso-app.onrender.com/messages/chat/${matchId}`, {
+      const response = await axios.get(`https://synapso-app.onrender.com/messages/chat/${matchId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'

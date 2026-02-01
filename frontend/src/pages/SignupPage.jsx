@@ -31,7 +31,7 @@ const SignupPage = () => {
     setSuccess('');
 
     try {
-      const signupResponse = await axios.post('http://https://synapso-app.onrender.com/users/signup', formData, {
+      const signupResponse = await axios.post('https://synapso-app.onrender.com/users/signup', formData, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -40,7 +40,7 @@ const SignupPage = () => {
       setSuccess('Account created successfully! Logging you in...');
 
       try {
-        const loginResponse = await axios.post('http://https://synapso-app.onrender.com/users/login', {
+        const loginResponse = await axios.post('https://synapso-app.onrender.com/users/login', {
           email: formData.email,
           password: formData.password
         }, {

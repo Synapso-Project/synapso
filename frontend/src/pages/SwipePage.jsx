@@ -27,7 +27,7 @@ const SwipePage = () => {
       setLoading(true);
       setError('');
       const token = localStorage.getItem('access_token');
-      const response = await axios.get('http://https://synapso-app.onrender.com/swipes/recommendations', {
+      const response = await axios.get('https://synapso-app.onrender.com/swipes/recommendations', {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -53,7 +53,7 @@ const SwipePage = () => {
   const fetchMatches = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await axios.get('http://https://synapso-app.onrender.com/matches/', {
+      const response = await axios.get('https://synapso-app.onrender.com/matches/', {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -68,7 +68,7 @@ const SwipePage = () => {
   const handleSwipe = async (direction, userId) => {
     try {
       const token = localStorage.getItem('access_token');
-      await axios.post('http://https://synapso-app.onrender.com/swipes/', {
+      await axios.post('https://synapso-app.onrender.com/swipes/', {
         swipee_id: userId,
         direction: direction
       }, {

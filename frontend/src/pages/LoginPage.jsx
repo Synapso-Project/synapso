@@ -28,7 +28,7 @@ const LoginPage = () => {
     setError('');
 
     try {
-      const response = await axios.post('http://https://synapso-app.onrender.com/users/login', formData, {
+      const response = await axios.post('https://synapso-app.onrender.com/users/login', formData, {
         headers: {
           'Content-Type': 'application/json'
         }

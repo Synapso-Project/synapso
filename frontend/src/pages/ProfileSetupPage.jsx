@@ -102,7 +102,7 @@ const ProfileSetupPage = () => {
       };
       console.log('Sending to backend:', backendData);
       
-      const response = await axios.put('http://https://synapso-app.onrender.com/users/profile', backendData, {
+      const response = await axios.put('https://synapso-app.onrender.com/users/profile', backendData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
