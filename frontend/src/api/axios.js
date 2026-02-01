@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "https://synapso-backend.onrender.com"  // HARDCODE
+  baseURL: "https://synapso-app.onrender.com"  // ✅ YOUR ACTUAL BACKEND
 });
 
 API.interceptors.request.use((config) => {
