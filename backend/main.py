@@ -42,12 +42,13 @@ async def app_init():
         print(f"❌ Beanie init failed: {e}")
         raise  # Crash fast on Render
 
-# ---------- Routers ----------
+# ---------- ROUTERS WITH PREFIXES ----------
 app.include_router(users_router, prefix="/users", tags=["users"])
 app.include_router(swipes_router, prefix="/swipes", tags=["swipes"])
 app.include_router(matches_router, prefix="/matches", tags=["matches"])
 app.include_router(messages_router, prefix="/messages", tags=["messages"])
 app.include_router(studyroom_router, prefix="/studyroom", tags=["studyroom"])
+
 
 @app.get("/")
 async def root():
