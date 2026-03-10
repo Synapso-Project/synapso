@@ -4,9 +4,10 @@ from pydantic import BaseModel, EmailStr
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+from bson import ObjectId
 import traceback
 
-from models import User
+from models import User, Match, Swipe
 from schemas import UserCreate, UserLogin, UserPublic, TokenResponse, UserProfileUpdate, ProfileUpdateResponse
 from config import JWT_SECRET, JWT_ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 
@@ -218,3 +219,125 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
         "academic_level": getattr(current_user, 'academic_level', None),
         "goals": getattr(current_user, 'goals', [])
     }
+
+# 🔥 MATCHES ENDPOINT - Shows your DB matches!
+@router.get("/matches")
+async def get_user_matches(current_user: User = Depends(get_current_user)):
+    """Get current user's matches from database"""
+    print(f"🔍 Fetching matches for {current_user.username}")
+    
+    matches = await Match.find({
+        "$or": [
+            {"user1_id": str(current_user.id)},
+            {"user2_id": str(current_user.id)}
+        ]
+    }).to_list()
+    
+    print(f"Found {len(matches)} raw matches")
+    
+    result = []
+    for match in matches:
+        # Get other user ID
+        other_id = match.user2_id if match.user1_id == str(current_user.id) else match.user1_id
+        
+        # Fetch other user details
+        other_user = await User.get(other_id)
+        if other_user:
+            result.append({
+                "id": str(match.id),
+                "user_id": str(other_user.id),
+                "username": other_user.username,
+                "email": other_user.email,
+                "subjects": getattr(other_user, 'subjects', []),
+                "availability": getattr(other_user, 'availability', []),
+                "bio": getattr(other_user, 'bio', ''),
+                "matched_at": match.matched_at.isoformat() if match.matched_at else None
+            })
+    
+    print(f"✅ Returning {len(result)} formatted matches")
+    return result
+
+# 🔥 RECOMMENDATIONS - Users to swipe on
+@router.get("/recommendations")
+async def get_recommendations(current_user: User = Depends(get_current_user)):
+    """Get other users with matching subjects/availability"""
+    print(f"🔍 Getting recommendations for {current_user.username}")
+    
+    if not getattr(current_user, 'profile_completed', False):
+        return []
+    
+    # Find users with overlapping subjects
+    pipeline = [
+        {"$match": {
+            "profile_completed": True,
+            "_id": {"$ne": current_user.id}
+        }},
+        {"$addFields": {
+            "common_subjects": {
+                "$setIntersection": [
+                    "$subjects", 
+                    current_user.subjects or []
+                ]
+            }
+        }},
+        {"$match": {"common_subjects.0": {"$exists": True}}},
+        {"$limit": 20}
+    ]
+    
+    candidates = await User.aggregate(pipeline).to_list()
+    
+    result = []
+    for user in candidates:
+        result.append({
+            "id": str(user['_id']),
+            "username": user['username'],
+            "subjects": user.get('subjects', []),
+            "availability": user.get('availability', []),
+            "bio": user.get('bio', ''),
+            "profile_completed": user.get('profile_completed', False)
+        })
+    
+    print(f"✅ {len(result)} recommendations")
+    return result
+
+# 🔥 SWIPE ENDPOINT - Creates matches!
+@router.post("/swipe")
+async def swipe_user(swipe_data: dict, current_user: User = Depends(get_current_user)):
+    """Handle swipe right/left + create mutual matches"""
+    target_id = swipe_data.get("user_id")
+    direction = swipe_data.get("direction")
+    
+    print(f"👆 {current_user.username} swiped {direction} on {target_id}")
+    
+    if not target_id:
+        raise HTTPException(400, "Missing user_id")
+    
+    # Create swipe record
+    swipe = Swipe(
+        swiper_id=str(current_user.id),
+        target_id=target_id,
+        direction=direction,
+        swiped_at=datetime.utcnow()
+    )
+    await swipe.insert()
+    
+    if direction == "right":
+        # Check mutual swipe
+        mutual = await Swipe.find_one({
+            "swiper_id": target_id,
+            "target_id": str(current_user.id),
+            "direction": "right"
+        })
+        
+        if mutual:
+            # 🎉 MUTUAL MATCH!
+            match = Match(
+                user1_id=str(min(current_user.id, ObjectId(target_id))),
+                user2_id=str(max(current_user.id, ObjectId(target_id))),
+                matched_at=datetime.utcnow()
+            )
+            await match.insert()
+            print(f"🎉 MATCH CREATED: {current_user.username} + {target_id}")
+            return {"matched": True, "message": "It's a match! 🎉"}
+    
+    return {"swiped": True, "direction": direction}
