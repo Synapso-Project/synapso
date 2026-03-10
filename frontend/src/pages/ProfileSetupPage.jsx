@@ -4,7 +4,6 @@ import { useAuth } from '../context/AuthContext';
 import { CheckCircle, ChevronLeft, BookOpen, Clock, Users } from 'lucide-react';
 import axios from 'axios';
 
-// ✅ FIXED: Backend URL consistency (matches all other pages)
 const API_BASE = 'https://synapso-backend.onrender.com';
 
 const ProfileSetupPage = () => {
@@ -29,35 +28,51 @@ const ProfileSetupPage = () => {
     });
   };
 
+  // 🔥 FIXED: Parse comma-separated → arrays + Correct endpoint
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    
+
     try {
       const token = localStorage.getItem('access_token');
       
-      // ✅ FIXED: Correct backend URL + Authorization header
-      const response = await axios.patch(`${API_BASE}/users/me`, formData, {
+      // 🔥 CRITICAL FIX: Convert strings → arrays for backend
+      const profileData = {
+        subjects: formData.subjects.split(',').map(s => s.trim()).filter(s => s),
+        availability: formData.availability.split(',').map(a => a.trim()).filter(a => a),
+        bio: formData.bio,
+        study_habits: formData.studyGoals ? formData.studyGoals.split(',').map(g => g.trim()).filter(g => g) : [],
+        profile_completed: true
+      };
+
+      console.log('🔥 SENDING:', profileData);
+
+      // 🔥 FIXED: POST /users/profile (your new endpoint!)
+      const response = await axios.post(`${API_BASE}/users/profile`, profileData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
 
-      setSuccess('Profile updated successfully! 🎉');
+      console.log('✅ Profile saved:', response.data);
+      setSuccess('Profile updated successfully! 🎉 Starting swipe...');
       
       setTimeout(() => {
         navigate('/swipe');
       }, 2000);
 
     } catch (error) {
-      console.error('Profile update error:', error);
+      console.error('❌ Profile update error:', error.response?.data || error);
+      
       if (error.response?.status === 401) {
-        // Token expired, redirect to login
+        localStorage.removeItem('access_token');
         navigate('/login');
+      } else if (error.response?.status === 405) {
+        setError('Endpoint not found. Backend needs POST /users/profile endpoint.');
       } else {
-        setError(error.response?.data?.detail || 'Failed to update profile. Please try again.');
+        setError(error.response?.data?.detail || 'Failed to update profile.');
       }
     } finally {
       setLoading(false);
@@ -193,7 +208,7 @@ const ProfileSetupPage = () => {
                   fontSize: '0.95rem'
                 }}>
                   <Clock size={18} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'middle' }} />
-                  When are you available? (e.g., Mon 18-20, Wed 16-18)
+                  When are you available? (comma separated)
                 </label>
                 <textarea
                   name="availability"
@@ -264,6 +279,12 @@ const ProfileSetupPage = () => {
                 <p style={{ color: 'rgba(61, 48, 45, 0.8)', marginBottom: '32px' }}>
                   Review your study preferences and click save to start swiping!
                 </p>
+                {/* 🔥 Show preview data */}
+                <div style={{ textAlign: 'left', background: 'rgba(255,255,255,0.1)', padding: '20px', borderRadius: '12px', marginTop: '20px' }}>
+                  <strong>Subjects:</strong> {formData.subjects.split(',').map(s => s.trim()).join(', ')}<br/>
+                  <strong>Availability:</strong> {formData.availability.split(',').map(a => a.trim()).join(', ')}<br/>
+                  <strong>Bio:</strong> {formData.bio.substring(0, 100)}...
+                </div>
               </div>
             </>
           )}
