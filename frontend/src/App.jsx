@@ -14,12 +14,17 @@ import PrivateRoute from './components/PrivateRoute';
 import UserProfileView from './pages/UserProfileView';
 import StudyRoomPage from './pages/StudyRoomPage';
 import StudyRoomEntry from "./pages/StudyRoomEntry";
+import FooterCopyright from './components/FooterCopyright';
 
 const AppLayout = ({ children }) => (
-  <>
-    <Header />
-    {children}
-  </>
+  <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <div style={{ flex: 1 }}>
+      <Header />
+      {children}
+    </div>
+    {/* ✅ USE COMPONENT INSTEAD OF INLINE FOOTER */}
+    <FooterCopyright />
+  </div>
 );
 
 function App() {
@@ -34,7 +39,7 @@ function App() {
           <Route path="/studyroom-entry" element={<StudyRoomEntry />} />
           <Route path="/studyroom/:roomId" element={<StudyRoomPage />} />
 
-          {/* Private Routes - WITH HEADER */}
+          {/* Private Routes - WITH HEADER + FOOTER */}
           <Route path="/" element={
             <PrivateRoute>
               <AppLayout>
