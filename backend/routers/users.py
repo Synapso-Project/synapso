@@ -4,7 +4,7 @@ from pydantic import BaseModel, EmailStr
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-import traceback  # ✅ DEBUG
+import traceback
 
 from models import User
 from schemas import UserCreate, UserLogin, UserPublic, TokenResponse, UserProfileUpdate, ProfileUpdateResponse
@@ -35,10 +35,9 @@ def create_access_token(data: dict, expires_delta: int = None):
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
-# ✅ FIXED: DEBUG JWT Verification
 def verify_token(token: str):
     try:
-        print(f"🔍 DEBUG: Verifying token: {token[:30]}...")  # First 30 chars
+        print(f"🔍 DEBUG: Verifying token: {token[:30]}...")
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         print(f"✅ DEBUG: Payload decoded: {payload}")
         user_id: str = payload.get("sub")
@@ -76,6 +75,58 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     
     print(f"✅ DEBUG: Found user: {user.email}")
     return user
+
+# 🔥 CRITICAL NEW ENDPOINT - FIXES "SAVE & SWIPE" 405 ERROR
+class ProfileUpdateSchema(BaseModel):
+    subjects: list[str] = []
+    availability: list[str] = []
+    bio: str = ""
+    study_habits: list[str] = []
+    interests: list[str] = []
+    study_style: str = ""
+    preferred_study_time: str = ""
+    study_location: str = ""
+    profile_completed: bool = True
+
+@router.post("/profile", response_model=dict)
+async def update_profile(
+    profile_data: ProfileUpdateSchema,
+    current_user: User = Depends(get_current_user)
+):
+    """Complete user profile setup after signup - FIXES 405 ERROR"""
+    try:
+        print(f"🔥 UPDATING PROFILE for {current_user.email}")
+        print(f"Profile data: {profile_data.dict()}")
+        
+        # Update user document with ALL profile fields
+        update_dict = {
+            "subjects": profile_data.subjects,
+            "availability": profile_data.availability,
+            "bio": profile_data.bio,
+            "study_habits": profile_data.study_habits,
+            "interests": profile_data.interests,
+            "study_style": profile_data.study_style,
+            "preferred_study_time": profile_data.preferred_study_time,
+            "study_location": profile_data.study_location,
+            "profile_completed": profile_data.profile_completed
+        }
+        
+        # Remove empty fields
+        update_dict = {k: v for k, v in update_dict.items() if v or v == False}
+        
+        await current_user.set(update_dict)
+        print(f"✅ Profile updated successfully for {current_user.username}")
+        
+        return {
+            "message": "Profile updated successfully",
+            "profile_completed": True,
+            "username": current_user.username
+        }
+        
+    except Exception as e:
+        print(f"❌ Profile update error: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail="Profile update failed")
 
 # ---------- Routes (UNCHANGED - ALL WORKING) ----------
 @router.post("/signup", response_model=UserPublic)
@@ -132,7 +183,6 @@ async def login(user: UserLogin):
 
     return TokenResponse(access_token=access_token, user=user_data)
 
-# ALL OTHER ROUTES UNCHANGED (copy from your original)...
 @router.get("/profile", response_model=UserPublic)
 async def get_profile(current_user: User = Depends(get_current_user)):
     return UserPublic(
@@ -168,5 +218,3 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
         "academic_level": getattr(current_user, 'academic_level', None),
         "goals": getattr(current_user, 'goals', [])
     }
-
-# ... (keep all your other routes exactly the same - update_profile, delete_profile, stats, get_user_public_profile)
